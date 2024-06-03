@@ -1,0 +1,8 @@
+
+*.pyc
+*.jpg
+*.png
+venv
+*.pt
+__pycache__
+all_embeddings.json
