@@ -103,4 +103,4 @@ erasing: 0.4
 crop_fraction: 1.0
 cfg: null
 tracker: botsort.yaml
-save_dir: /Users/pabloelgueta/Documents/trading_card_detection/runs/detect/train2
+save_dir: /Users/pabloelgueta/Documents/trading-card-assistant/runs/detect/train2

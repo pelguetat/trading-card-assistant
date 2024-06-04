@@ -1,14 +1,14 @@
 import threading
-import identify_cards_world as main_script
+import core.identify_cards_world as main_script
 import queue
 from concurrent.futures import ThreadPoolExecutor
-from langgraph_main import langgraph_start
+from core.langgraph_main import langgraph_start
 from dotenv import load_dotenv
 import os
 import tkinter as tk
 import logging
-import cProfile
-from audio_commands import process_audio_commands
+from core.audio_commands import process_audio_commands
+from PIL import Image, ImageTk
 
 # Configure logging
 logging.basicConfig(
@@ -62,13 +62,19 @@ def main():
         canvas = tk.Canvas(main_frame, width=1280, height=720)
         canvas.pack()
 
-        # Run the display_frames function in a separate thread
-        display_thread = threading.Thread(
-            target=main_script.display_frames,
-            args=(frame_queue, canvas, root, terminate_flag),
-        )
-        display_thread.start()
-        logging.info("Display frames thread started")
+        def update_frame():
+            if not frame_queue.empty():
+                data = frame_queue.get()
+                if data is None:
+                    return
+                frame, _, _, _ = data
+                img = Image.fromarray(frame)
+                imgtk = ImageTk.PhotoImage(image=img)
+                canvas.create_image(0, 0, anchor=tk.NW, image=imgtk)
+                canvas.imgtk = imgtk  # Keep a reference to avoid garbage collection
+            root.after(30, update_frame)  # Schedule the next frame update
+
+        update_frame()  # Start the frame update loop
 
         # Create and start a thread for process_audio_commands
         audio_thread = threading.Thread(
