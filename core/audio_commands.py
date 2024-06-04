@@ -31,10 +31,9 @@ def transcribe(chunk_length_s=5.0, stream_chunk_s=1.0):
     return item["text"]
 
 
-def process_audio_commands(frame_queue, terminate_flag):
-    while not terminate_flag.is_set():
+def process_audio_commands(frame_queue):
 
-        while wake_word_detector(debug=False, terminate_flag=terminate_flag):
-            print("Listening!")
-            transcription = transcribe()
-            langgraph_start(user_input=transcription, frame_queue=frame_queue, terminate_flag=terminate_flag)
+    while wake_word_detector(debug=False):
+        print("Listening!")
+        transcription = transcribe()
+        langgraph_start(user_input=transcription, frame_queue=frame_queue)

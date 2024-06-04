@@ -44,28 +44,24 @@ def wake_word_detector(
 
     print("Listening for wake word...")
     audio_buffer = np.zeros(int(sampling_rate * chunk_length_s), dtype=np.int16)
-
     try:
-        while not terminate_flag.is_set():
+        while True:
+            audio_chunk = np.frombuffer(
+                stream.read(chunk_size, exception_on_overflow=False), dtype=np.int16
+            )
+            audio_buffer = np.roll(audio_buffer, -chunk_size)
+            audio_buffer[-chunk_size:] = audio_chunk
 
-            while True:
-                audio_chunk = np.frombuffer(
-                    stream.read(chunk_size, exception_on_overflow=False), dtype=np.int16
-                )
-                audio_buffer = np.roll(audio_buffer, -chunk_size)
-                audio_buffer[-chunk_size:] = audio_chunk
+            # Normalize the audio buffer
+            normalized_audio = normalize_audio(audio_buffer)
 
-                # Normalize the audio buffer
-                normalized_audio = normalize_audio(audio_buffer)
-
-                prediction = classifier(normalized_audio)
-                prediction = prediction[0]
-                if debug:
-                    print(prediction)
-                if prediction["label"] == wake_word:
-                    if prediction["score"] > prob_threshold:
-                        return True
-        return False
+            prediction = classifier(normalized_audio)
+            prediction = prediction[0]
+            if debug:
+                print(prediction)
+            if prediction["label"] == wake_word:
+                if prediction["score"] > prob_threshold:
+                    return True
     except KeyboardInterrupt:
         print("Stopping...")
     finally:

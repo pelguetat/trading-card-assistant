@@ -28,6 +28,7 @@ from langchain_core.runnables import ensure_config
 
 from dotenv import load_dotenv
 import queue
+import random
 
 load_dotenv()
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
@@ -35,42 +36,40 @@ os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_PROJECT"] = "Pokemon Trainer"
 
 
-def langgraph_start(user_input, frame_queue, terminate_flag):
-    import random
+def langgraph_start(user_input, frame_queue):
 
-    while not terminate_flag.is_set():
 
-        thread_id = str(random.randint(10000, 99999))
-        config = {
-            "configurable": {
-                "thread_id": thread_id,
-                "frame_queue": frame_queue,
-            }
+    thread_id = str(random.randint(10000, 99999))
+    config = {
+        "configurable": {
+            "thread_id": thread_id,
+            "frame_queue": frame_queue,
         }
-        _printed = set()
+    }
+    _printed = set()
 
-        events = part_1_graph.stream(
-            {
-                "messages": (
-                    "user",
-                    user_input,
-                )
-            },
-            config,
-            stream_mode="values",
-        )
-        for event in events:
-            _print_event(event, _printed)
-            messages = event.get("messages")
-            if (
-                messages
-                and isinstance(messages, list)
-                and messages[-1].type == "ai"
-                and not messages[-1].tool_calls
-            ):
-                llm = LLMChat()
-                response = messages[-1].content
-                llm.create_audio(response)
+    events = part_1_graph.stream(
+        {
+            "messages": (
+                "user",
+                user_input,
+            )
+        },
+        config,
+        stream_mode="values",
+    )
+    for event in events:
+        _print_event(event, _printed)
+        messages = event.get("messages")
+        if (
+            messages
+            and isinstance(messages, list)
+            and messages[-1].type == "ai"
+            and not messages[-1].tool_calls
+        ):
+            llm = LLMChat()
+            response = messages[-1].content
+            llm.create_audio(response)
 
 
 @tool

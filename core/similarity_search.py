@@ -125,7 +125,7 @@ class SimilaritySearch:
 
         return card_metadata
 
-    def search_index(
+    def search_index_and_add_metadata(
         self, index: faiss.IndexFlatL2, embeddings: list, k: int = 3
     ) -> list:
         """
@@ -135,14 +135,18 @@ class SimilaritySearch:
 
         results = []
         for idx in I[0]:
-            file_name = self.files[idx]
-            results.append(
-                {
-                    "file": file_name,
-                    "metadata": self.search_metadata(os.path.splitext(file_name)[0]),
-                }
-            )
+            try:
+                file_name = self.files[idx]
+                pokemon_id = os.path.splitext(os.path.basename(file_name))[0]
 
+                results.append(
+                    {
+                        "file": file_name,
+                        "metadata": self.search_metadata(pokemon_id=pokemon_id),
+                    }
+                )
+            except Exception as e:
+                print(f"An exception occurred: {e}")
         return results
 
     def display_image(self, image_path):
@@ -152,9 +156,9 @@ class SimilaritySearch:
 
     def load_index(
         self,
-        index_path="data.bin",
-        embeddings_path="all_embeddings.json",
-        metadata_path="all_metadata.json",
+        index_path="/Users/pabloelgueta/Documents/trading-card-assistant/data.bin",
+        embeddings_path="/Users/pabloelgueta/Documents/trading-card-assistant/all_embeddings.json",
+        metadata_path="/Users/pabloelgueta/Documents/trading-card-assistant/all_metadata.json",
     ):
         """
         Load the index, embeddings, and metadata from files.
@@ -176,7 +180,7 @@ class SimilaritySearch:
         for cropped_image in cropped_images:
             with torch.no_grad():
                 embedding = self.model(self.load_image(cropped_image).to(self.device))
-                results = self.search_index(
+                results = self.search_index_and_add_metadata(
                     self.index, np.array(embedding[0].cpu()).reshape(1, -1), k
                 )
                 results_list.append(results)

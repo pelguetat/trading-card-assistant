@@ -56,7 +56,7 @@ def crop_and_save_images(data):
     return crop_and_save_images_from_frame(best_frame_data, output_dir)
 
 
-def process_video(frame_queue, terminate_flag):
+def process_video(frame_queue):
 
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
