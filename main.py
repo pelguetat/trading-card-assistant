@@ -10,6 +10,7 @@ import tkinter as tk
 import logging
 from core.audio_commands import process_audio_commands
 from PIL import Image, ImageTk
+import cv2
 
 # Configure logging
 logging.basicConfig(
@@ -24,13 +25,25 @@ os.environ["LANGCHAIN_PROJECT"] = "Pokemon Trainer"
 # Global flag to signal threads to terminate
 terminate_flag = ""
 
-
+def display_video(frame_queue):
+    while True:
+        if not frame_queue.empty():
+            data = frame_queue.get()
+            if data is None:
+                break
+            frame, _, _, _ = data
+            cv2.imshow('Video', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+    cv2.destroyAllWindows()
 def main():
     logging.info("Starting main function")
     frame_queue = multiprocessing.Queue()
 
     video_process = Process(target=main_script.process_video, args=(frame_queue,))
     video_process.start()
+    video_display_process = Process(target=display_video, args=(frame_queue,))
+    video_display_process.start()
     logging.info("Video process started")
     # Create a simple Tkinter window with a button
     global root
@@ -61,22 +74,21 @@ def main():
     start_button.pack(pady=20)
 
     # Create a canvas to display the video frames
-    canvas = tk.Canvas(main_frame, width=1280, height=720)
-    canvas.pack()
+    canvas = tk.Canvas(main_frame)
+    canvas.pack(expand=True, fill=tk.BOTH)
+    # def update_frame():
+    #     if not frame_queue.empty():
+    #         data = frame_queue.get()
+    #         if data is None:
+    #             return
+    #         frame, _, _, _ = data
+    #         img = Image.fromarray(frame)
+    #         imgtk = ImageTk.PhotoImage(image=img)
+    #         canvas.create_image(0, 0, anchor=tk.NW, image=imgtk)
+    #         canvas.imgtk = imgtk  # Keep a reference to avoid garbage collection
+    #     root.after(30, update_frame)  # Schedule the next frame update
 
-    def update_frame():
-        if not frame_queue.empty():
-            data = frame_queue.get()
-            if data is None:
-                return
-            frame, _, _, _ = data
-            img = Image.fromarray(frame)
-            imgtk = ImageTk.PhotoImage(image=img)
-            canvas.create_image(0, 0, anchor=tk.NW, image=imgtk)
-            canvas.imgtk = imgtk  # Keep a reference to avoid garbage collection
-        root.after(30, update_frame)  # Schedule the next frame update
-
-    update_frame()  # Start the frame update loop
+    # update_frame()  # Start the frame update loop
 
     # Create and start a thread for process_audio_commands
     audio_process = Process(
@@ -86,7 +98,7 @@ def main():
     audio_process.start()
     logging.info("Audio commands process started")
 
-
+    display_video(frame_queue)
     def on_closing():
         logging.info("Closing application")
         terminate_flag.set()

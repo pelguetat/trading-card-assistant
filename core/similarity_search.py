@@ -39,7 +39,7 @@ class SimilaritySearch:
             if f.lower().endswith(".png")
         ]
         self.transform_image = T.Compose(
-            [T.ToTensor(), T.Resize(244), T.CenterCrop(224), T.Normalize([0.5], [0.5])]
+            [T.ToTensor(), T.Resize((224, 224)), T.Lambda(lambda x: x[:, :x.size(1)//2, :]), T.Normalize([0.5], [0.5])]
         )
         self.index, self.all_embeddings, self.all_metadata = self.load_index()
         # self.metadata = self.extract_metadata(json_file_path)
@@ -90,7 +90,7 @@ class SimilaritySearch:
                 embedding = embeddings[0].cpu().numpy()
 
                 all_embeddings[file] = np.array(embedding).reshape(1, -1).tolist()
-                all_metadata[os.path.splitext(file)[0]] = self.metadata.get(
+                all_metadata[os.path.splitext(file)[0]] = self.all_metadata.get(
                     os.path.splitext(os.path.basename(file))[0], {}
                 )
                 index.add(np.array(embedding).reshape(1, -1))
@@ -102,7 +102,7 @@ class SimilaritySearch:
             f.write(json.dumps(all_metadata))
 
         faiss.write_index(index, "data.bin")
-
+        self.extract_metadata(json_dir_path="/Users/pabloelgueta/Documents/trading-card-assistant/pokemon-tcg-data-master/cards/en/")
         return index, all_embeddings, all_metadata
 
     def extract_metadata(self, json_dir_path):
@@ -122,7 +122,9 @@ class SimilaritySearch:
                     card_metadata[card["id"]] = self.flatten_metadata(
                         {k: v for k, v in card.items() if k != "images"}
                     )
-
+                # Write the metadata to a JSON file
+        with open("all_metadata.json", "w") as f:
+            f.write(json.dumps(card_metadata))
         return card_metadata
 
     def search_index_and_add_metadata(

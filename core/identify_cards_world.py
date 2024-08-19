@@ -9,9 +9,6 @@ import supervision as sv
 
 # set this env variable export OPENCV_LOG_LEVEL=ERROR  # or NONE to completely silence
 os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
-# # Event to trigger cropping
-crop_event = threading.Event()
-
 
 # Configure logging
 logging.basicConfig(
@@ -58,14 +55,10 @@ def crop_and_save_images(data):
 
 def process_video(frame_queue):
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(2)
     if not cap.isOpened():
         print("Error: Could not open video stream")
         return
-
-    # Reduce resolution for faster processing
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -111,15 +104,27 @@ def process_video(frame_queue):
                 annotated_image, detections, labels=labels
             )
 
-            # Convert BGR to RGB
-            annotated_image = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
+            # # Convert BGR to RGB
+            # annotated_image = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
 
             # Put the processed frame and other variables into the queue
             frame_queue.put(
                 (annotated_image, detections.class_id, detections.xyxy, frame_count)
             )
-
         frame_count += 1
 
     cap.release()
     frame_queue.put(None)  # Signal the display thread to exit
+
+
+def display_video(frame_queue):
+    while True:
+        if not frame_queue.empty():
+            data = frame_queue.get()
+            if data is None:
+                break
+            frame, _, _, _ = data
+            cv2.imshow('Video', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+    cv2.destroyAllWindows()
