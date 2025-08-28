@@ -43,7 +43,10 @@ def crop_and_save_images_from_frame(frame_data, output_dir):
             cv2.imwrite(image_path, cropped_image)
             logging.info(f"Cropped image saved at: {image_path}")
             saved_images.append(image_path)
-
+    # Save the full frame
+    full_frame_path = os.path.join(output_dir, f"frame_{frame_count}_full.jpg")
+    cv2.imwrite(full_frame_path, frame)
+    logging.info(f"Full frame saved at: {full_frame_path}")
     return saved_images
 
 
@@ -55,7 +58,7 @@ def crop_and_save_images(data):
 
 def process_video(frame_queue):
 
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture("rtsp://192.168.0.21:8080/h264.sdp")
     if not cap.isOpened():
         print("Error: Could not open video stream")
         return
@@ -74,7 +77,7 @@ def process_video(frame_queue):
     model.set_classes(classes)
 
     frame_count = 0
-    skip_frames = 3  # Process every 2nd frame
+    skip_frames = 15  # Process every 2nd frame
 
     while True:
         ret, frame = cap.read()
@@ -93,7 +96,7 @@ def process_video(frame_queue):
                 )
             ]
             annotated_image = frame.copy()
-            BOUNDING_BOX_ANNOTATOR = sv.BoundingBoxAnnotator(thickness=2)
+            BOUNDING_BOX_ANNOTATOR = sv.BoxAnnotator(thickness=2)
             LABEL_ANNOTATOR = sv.LabelAnnotator(
                 text_thickness=2, text_scale=1, text_color=sv.Color.BLACK
             )
@@ -124,7 +127,12 @@ def display_video(frame_queue):
             if data is None:
                 break
             frame, _, _, _ = data
-            cv2.imshow('Video', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            # Add these lines for better display
+            cv2.namedWindow("Video", cv2.WINDOW_NORMAL)
+            cv2.setWindowProperty(
+                "Video", cv2.WND_PROP_ASPECT_RATIO, cv2.WINDOW_KEEPRATIO
+            )
+            cv2.imshow("Video", frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
     cv2.destroyAllWindows()

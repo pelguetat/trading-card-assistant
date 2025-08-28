@@ -28,7 +28,7 @@ else:
             for class_id, confidence in zip(detections.class_id, detections.confidence)
         ]
         annotated_image = frame.copy()
-        BOUNDING_BOX_ANNOTATOR = sv.BoundingBoxAnnotator(thickness=2)
+        BOUNDING_BOX_ANNOTATOR = sv.BoxAnnotator(thickness=2)
         LABEL_ANNOTATOR = sv.LabelAnnotator(
             text_thickness=2, text_scale=1, text_color=sv.Color.BLACK
         )

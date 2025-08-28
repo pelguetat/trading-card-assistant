@@ -14,7 +14,7 @@ from core.llm import LLMChat
 from core.prompts import PROMPT
 from core.similarity_search import SimilaritySearch
 from langchain_core.tools import tool
-
+from core.utils import get_multiple
 from langchain_core.runnables import RunnableLambda
 from langchain_core.messages import ToolMessage
 
@@ -27,7 +27,6 @@ from langchain_core.messages import ToolMessage
 from langchain_core.runnables import ensure_config
 
 from dotenv import load_dotenv
-import queue
 import random
 
 load_dotenv()
@@ -37,8 +36,6 @@ os.environ["LANGCHAIN_PROJECT"] = "Pokemon Trainer"
 
 
 def langgraph_start(user_input, frame_queue):
-
-
     thread_id = str(random.randint(10000, 99999))
     config = {
         "configurable": {
@@ -82,16 +79,6 @@ def card_identifier() -> str:
     frame_queue = configuration.get("frame_queue", None)
     if not frame_queue:
         raise ValueError("No frame_queue configured.")
-
-    def get_multiple(frame_queue, n):
-        """Retrieve up to n items from the queue."""
-        items = []
-        for _ in range(n):
-            try:
-                items.append(frame_queue.get())
-            except queue.Empty:
-                break
-        return items
 
     five_frames = get_multiple(frame_queue, 5)
     cropped_images = crop_and_save_images(five_frames)

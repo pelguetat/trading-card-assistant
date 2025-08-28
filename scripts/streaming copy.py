@@ -19,7 +19,7 @@ frame = next(iter(generator))
 results = model.infer(frame, confidence=0.002)
 detections = sv.Detections.from_inference(results).with_nms(threshold=0.1)
 annotated_image = frame.copy()
-BOUNDING_BOX_ANNOTATOR = sv.BoundingBoxAnnotator(thickness=2)
+BOUNDING_BOX_ANNOTATOR = sv.BoxAnnotator(thickness=2)
 LABEL_ANNOTATOR = sv.LabelAnnotator(
     text_thickness=2, text_scale=1, text_color=sv.Color.BLACK
 )
